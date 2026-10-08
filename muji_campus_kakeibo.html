@@ -82,6 +82,50 @@
 </head>
 <body class="min-h-screen flex flex-col md:flex-row antialiased">
 
+    <!-- ================= AUTH SCREEN ================= -->
+    <div id="authScreen" class="fixed inset-0 z-[100] bg-muji-bg overflow-y-auto flex items-center justify-center p-4">
+        <div class="w-full max-w-sm space-y-6 my-auto">
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 mx-auto bg-muji-red rounded flex items-center justify-center text-white font-serif font-bold text-2xl shadow-sm">無</div>
+                <h1 class="font-bold text-lg tracking-widest text-muji-text">無印校園記帳</h1>
+                <p class="text-[10px] text-muji-lightMuted tracking-wider font-mono">CAMPUS KAKEIBO</p>
+            </div>
+
+            <div class="muji-card p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-1 p-1 bg-muji-beige rounded text-xs font-medium text-center">
+                    <button type="button" id="authTabLogin" class="py-1.5 rounded">登入</button>
+                    <button type="button" id="authTabRegister" class="py-1.5 rounded">註冊新帳號</button>
+                </div>
+
+                <form id="formAuth" class="space-y-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">使用者名稱</label>
+                        <input type="text" id="authUsername" required maxlength="20" autocomplete="username" placeholder="2–20 個字元" class="muji-input w-full p-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">密碼</label>
+                        <input type="password" id="authPassword" required minlength="6" autocomplete="current-password" placeholder="至少 6 個字元" class="muji-input w-full p-2.5 text-xs">
+                    </div>
+                    <div id="authConfirmBox" class="hidden">
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">確認密碼</label>
+                        <input type="password" id="authPassword2" autocomplete="new-password" placeholder="再輸入一次密碼" class="muji-input w-full p-2.5 text-xs">
+                    </div>
+                    <label id="authLegacyBox" class="hidden flex items-start space-x-2 p-2.5 bg-muji-warningBg border border-muji-warningBorder rounded text-[11px] text-muji-brown cursor-pointer">
+                        <input type="checkbox" id="authLegacy" checked class="mt-0.5">
+                        <span>偵測到此瀏覽器有舊版記帳資料，勾選後會將它們匯入這個新帳號（匯入後舊的明文資料會被移除）。</span>
+                    </label>
+                    <p id="authError" class="hidden text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded px-2.5 py-1.5"></p>
+                    <button type="submit" id="authSubmit" class="w-full py-2.5 bg-muji-red hover:bg-muji-redHover text-white font-medium text-xs rounded transition tracking-wider">登入</button>
+                </form>
+
+                <p class="text-[10px] text-muji-lightMuted leading-relaxed border-t border-muji-border pt-3">
+                    每個帳號的資料會以您的密碼加密後存放在此裝置的瀏覽器中，帳號之間互不可見。
+                    請牢記密碼：忘記密碼將無法還原資料，建議定期到「預算與資料備份」匯出 JSON。
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Sidebar Navigation -->
     <aside class="hidden md:flex flex-col w-64 bg-[#f4f0ea] border-r border-muji-border p-6 sticky top-0 h-screen justify-between z-20">
         <div>
@@ -110,6 +154,10 @@
                     <i class="fa-solid fa-wallet w-4 text-center"></i>
                     <span>帳戶與銀行資產</span>
                 </button>
+                <button data-tab="recurring" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-repeat w-4 text-center"></i>
+                    <span>固定收支</span>
+                </button>
                 <button data-tab="splitter" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
                     <i class="fa-solid fa-calculator w-4 text-center"></i>
                     <span>聚餐 AA 分帳算盤</span>
@@ -127,6 +175,16 @@
 
         <!-- Sidebar Action -->
         <div class="pt-4 border-t border-muji-border">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <div class="flex items-center space-x-2 min-w-0">
+                    <div id="userAvatar" class="w-7 h-7 rounded-full bg-muji-brown text-white text-xs font-bold flex items-center justify-center shrink-0">?</div>
+                    <span id="userNameLabel" class="text-xs font-medium text-muji-text truncate">--</span>
+                </div>
+                <button id="btnLogoutDesktop" title="登出" class="text-muji-lightMuted hover:text-muji-red transition">
+                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                </button>
+            </div>
+            <div id="streakBadge" class="mb-3 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-[11px] font-bold text-muji-red text-center">🔥 連續記帳 0 天</div>
             <button id="btnSidebarQuickAdd" class="w-full py-2.5 bg-muji-red hover:bg-muji-redHover text-white font-medium text-xs rounded-md shadow-sm transition flex items-center justify-center space-x-2 tracking-wider">
                 <i class="fa-solid fa-plus"></i>
                 <span>新增一筆記帳</span>
@@ -142,9 +200,14 @@
             </div>
             <span class="font-bold text-xs tracking-wider text-muji-text">無印校園記帳</span>
         </div>
-        <button id="btnMobileQuickAdd" class="bg-muji-red text-white p-2 rounded-md shadow-sm">
-            <i class="fa-solid fa-plus w-4 h-4 text-center"></i>
-        </button>
+        <div class="flex items-center space-x-2">
+            <button id="btnLogoutMobile" title="登出" class="text-muji-muted p-2 rounded-md border border-muji-border bg-white">
+                <i class="fa-solid fa-right-from-bracket w-4 h-4 text-center"></i>
+            </button>
+            <button id="btnMobileQuickAdd" class="bg-muji-red text-white p-2 rounded-md shadow-sm">
+                <i class="fa-solid fa-plus w-4 h-4 text-center"></i>
+            </button>
+        </div>
     </header>
 
     <!-- Main Content Area -->
@@ -158,6 +221,7 @@
                     <p class="text-xs text-muji-muted mt-0.5">理性掌控生活費，質感度過大學學期</p>
                 </div>
                 <div class="flex items-center space-x-2">
+                    <button id="btnToggleBalance" title="隱藏 / 顯示結餘" class="muji-input px-2.5 py-1.5 text-xs text-muji-muted"><i class="fa-solid fa-eye"></i></button>
                     <input type="month" id="dashMonthFilter" class="muji-input px-3 py-1.5 text-xs font-mono">
                 </div>
             </div>
@@ -216,6 +280,15 @@
                     <button onclick="switchTab('accounts')" class="text-xs text-muji-red hover:underline">帳戶管理 / 新增帳戶 →</button>
                 </div>
                 <div id="dashAccountsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+            </div>
+
+            <!-- Cross-month comparison -->
+            <div class="muji-card p-5 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-muji-border">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase">跨月比較・看出錢多花在哪</h3>
+                    <span id="cmpLabel" class="text-[10px] text-muji-lightMuted font-mono"></span>
+                </div>
+                <div id="cmpList" class="divide-y divide-muji-border"></div>
             </div>
 
             <!-- Recent Transactions & Category Chart -->
@@ -290,6 +363,18 @@
             </div>
 
             <div id="accountsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- ================= TAB: RECURRING ================= -->
+        <div id="tab-recurring" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-muji-border">
+                <div>
+                    <h2 class="text-xl font-bold tracking-wide text-muji-text">固定收支</h2>
+                    <p class="text-xs text-muji-muted mt-0.5">薪資、房租、訂閱服務每月自動入帳，不再漏記帳</p>
+                </div>
+                <button onclick="openModal('modalRecurring')" class="px-3.5 py-1.5 bg-muji-brown hover:bg-muji-text text-white text-xs font-medium rounded shadow-sm transition">+ 新增固定收支</button>
+            </div>
+            <div id="recurList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         </div>
 
         <!-- ================= TAB 4: AA BILL SPLITTER ================= -->
@@ -433,6 +518,19 @@
                 <p class="text-xs text-muji-muted mt-0.5">設定每月生活費預算、吃土門檻與本機資料匯出匯入</p>
             </div>
 
+            <div class="muji-card p-5 space-y-4">
+                <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">外觀與偏好</h3>
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">自訂主題色</label>
+                    <div class="flex items-center gap-3 mt-2">
+                        <div id="themeSwatches" class="flex gap-2"></div>
+                        <input type="color" id="themeColorInput" class="w-8 h-8 rounded border border-muji-border bg-transparent cursor-pointer">
+                    </div>
+                </div>
+                <label class="flex items-center justify-between text-xs text-muji-text cursor-pointer"><span>隱藏結餘（帳戶餘額與淨收支不外露）</span><input type="checkbox" id="prefHideBalance"></label>
+                <label class="flex items-center justify-between text-xs text-muji-text cursor-pointer"><span>智能分類排序（常用類別排在前面）</span><input type="checkbox" id="prefSmartSort"></label>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="muji-card p-5 space-y-4">
                     <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">預算與吃土門檻設定</h3>
@@ -473,7 +571,12 @@
 
                         <button id="btnClearData" class="w-full py-2 px-3 border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-medium rounded transition flex items-center justify-center space-x-2 mt-4">
                             <i class="fa-solid fa-trash-can"></i>
-                            <span>清空所有記帳紀錄與帳戶</span>
+                            <span>清空此帳號的所有記帳紀錄與帳戶</span>
+                        </button>
+
+                        <button id="btnDeleteAccount" class="w-full py-2 px-3 border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-medium rounded transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-user-slash"></i>
+                            <span>永久刪除我的使用者帳號</span>
                         </button>
                     </div>
                 </div>
@@ -495,6 +598,10 @@
         <button data-tab="accounts" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
             <i class="fa-solid fa-wallet text-sm"></i>
             <span class="text-[9px] font-medium mt-0.5">帳戶</span>
+        </button>
+        <button data-tab="recurring" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
+            <i class="fa-solid fa-repeat text-sm"></i>
+            <span class="text-[9px] font-medium mt-0.5">固定</span>
         </button>
         <button data-tab="splitter" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
             <i class="fa-solid fa-calculator text-sm"></i>
@@ -626,6 +733,51 @@
         </div>
     </div>
 
+    <!-- Modal: Recurring -->
+    <div id="modalRecurring" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm hidden">
+        <div class="muji-card bg-white w-full max-w-sm p-6 space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modalRecurring')" class="absolute top-4 right-4 text-muji-lightMuted hover:text-muji-text"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-sm font-bold tracking-wider text-muji-text">新增固定收支</h3>
+            <form id="formRecur" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">類型</label>
+                        <select id="recurType" class="muji-input w-full p-2 text-xs"><option value="expense">支出</option><option value="income">收入</option></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">金額 (NT$)</label>
+                        <input type="number" id="recurAmount" required min="1" class="muji-input w-full p-2 text-xs font-mono font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">名稱</label>
+                    <input type="text" id="recurName" required placeholder="如：房租、健身房、家教薪資" class="muji-input w-full p-2 text-xs">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">類別</label>
+                        <select id="recurCategory" class="muji-input w-full p-2 text-xs"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">帳戶</label>
+                        <select id="recurAccount" class="muji-input w-full p-2 text-xs"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">每月幾號</label>
+                        <input type="number" id="recurDay" min="1" max="31" value="5" required class="muji-input w-full p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">結束日（空白＝無限期）</label>
+                        <input type="date" id="recurEnd" class="muji-input w-full p-2 text-xs font-mono">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-muji-brown text-white font-medium text-xs rounded transition">儲存固定收支</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-16 md:bottom-6 right-6 z-50 bg-muji-brown text-white px-4 py-2.5 rounded shadow-lg flex items-center space-x-2 text-xs font-medium opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
         <i class="fa-solid fa-circle-check text-muji-sage"></i>
@@ -655,34 +807,423 @@
             ]
         };
 
-        // Initial State without default Post Office (Default only Cash & LINE Pay)
-        let db = {
-            transactions: JSON.parse(localStorage.getItem('muji_campus_tx')) || [],
-            accounts: JSON.parse(localStorage.getItem('muji_campus_acc')) || [
-                { id: 'acc_cash', name: '現金錢包', type: 'cash', balance: 0 },
-                { id: 'acc_linepay', name: 'LINE Pay / 街口', type: 'epay', balance: 0 }
-            ],
-            monthlyBudget: JSON.parse(localStorage.getItem('muji_campus_budget')) || 10000,
-            alertThreshold: JSON.parse(localStorage.getItem('muji_campus_alert')) || 150
-        };
+        function defaultDB() {
+            return {
+                transactions: [],
+                accounts: [
+                    { id: 'acc_cash', name: '現金錢包', type: 'cash', balance: 0 },
+                    { id: 'acc_linepay', name: 'LINE Pay / 街口', type: 'epay', balance: 0 }
+                ],
+                monthlyBudget: 10000,
+                alertThreshold: 150,
+                recurring: [],
+                theme: '#8c2e2b',
+                hideBalance: false,
+                smartSort: false
+            };
+        }
+
+        // 登入後才會載入該使用者的資料
+        let db = defaultDB();
 
         let dashChartInstance = null;
+
+        // ================= 使用者帳號系統 =================
+        // 每個帳號的資料以「密碼衍生的金鑰 (PBKDF2 → AES-GCM)」加密後存於 localStorage，
+        // 不同帳號互不可讀；密碼本身不會被儲存。
+        const USERS_KEY = 'muji_users';
+        const DATA_PREFIX = 'muji_data_';
+        const SESSION_KEY = 'muji_session';
+        const LAST_USER_KEY = 'muji_last_user';
+        const LEGACY_KEYS = ['muji_campus_tx', 'muji_campus_acc', 'muji_campus_budget', 'muji_campus_alert'];
+
+        let currentUser = null;   // { id, name }
+        let currentKey = null;    // CryptoKey (只存在記憶體 / 分頁 session)
+        let saveQueue = Promise.resolve();
+        let authMode = 'login';
+
+        const TE = new TextEncoder(), TD = new TextDecoder();
+        function toB64(buf) {
+            const bytes = new Uint8Array(buf);
+            let s = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+            return btoa(s);
+        }
+        function fromB64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+
+        async function deriveKey(password, salt) {
+            const base = await crypto.subtle.importKey('raw', TE.encode(password), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+                base, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
+            );
+        }
+        async function encryptText(key, text) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, TE.encode(text));
+            return { iv: toB64(iv), ct: toB64(ct) };
+        }
+        async function decryptText(key, blob) {
+            const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromB64(blob.iv) }, key, fromB64(blob.ct));
+            return TD.decode(pt);
+        }
+
+        function getUsers() {
+            try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch (e) { return {}; }
+        }
+        function setUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+        function readBlob(id) {
+            try { return JSON.parse(localStorage.getItem(DATA_PREFIX + id)); } catch (e) { return null; }
+        }
+        function parseDB(text) { return Object.assign(defaultDB(), JSON.parse(text)); }
+
+        // 舊版（尚無帳號系統）留在瀏覽器裡的資料
+        function loadLegacyDB() {
+            if (!localStorage.getItem('muji_campus_tx') && !localStorage.getItem('muji_campus_acc')) return null;
+            try {
+                const base = defaultDB();
+                const tx = JSON.parse(localStorage.getItem('muji_campus_tx'));
+                const acc = JSON.parse(localStorage.getItem('muji_campus_acc'));
+                const bud = JSON.parse(localStorage.getItem('muji_campus_budget'));
+                const alt = JSON.parse(localStorage.getItem('muji_campus_alert'));
+                if (tx) base.transactions = tx;
+                if (acc) base.accounts = acc;
+                if (bud) base.monthlyBudget = bud;
+                if (alt) base.alertThreshold = alt;
+                return base;
+            } catch (e) { return null; }
+        }
+
+        // 加密後寫入（排隊，避免連續儲存時順序錯亂）
+        function persistDB() {
+            if (!currentUser || !currentKey) return;
+            const id = currentUser.id, key = currentKey, snapshot = JSON.stringify(db);
+            saveQueue = saveQueue.then(async () => {
+                try {
+                    localStorage.setItem(DATA_PREFIX + id, JSON.stringify(await encryptText(key, snapshot)));
+                } catch (e) {
+                    console.error(e);
+                    showToast('儲存失敗，請匯出備份後重試');
+                }
+            });
+        }
+
+        function saveDB() {
+            persistDB();
+            renderAll();
+        }
+
+        function setAuthError(msg) {
+            const el = document.getElementById('authError');
+            el.textContent = msg || '';
+            el.classList.toggle('hidden', !msg);
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode;
+            const isReg = mode === 'register';
+            document.getElementById('authTabLogin').className = 'py-1.5 rounded ' + (!isReg ? 'bg-white text-muji-red font-bold shadow-sm' : 'text-muji-muted');
+            document.getElementById('authTabRegister').className = 'py-1.5 rounded ' + (isReg ? 'bg-white text-muji-red font-bold shadow-sm' : 'text-muji-muted');
+            document.getElementById('authConfirmBox').classList.toggle('hidden', !isReg);
+            document.getElementById('authPassword2').required = isReg;
+            document.getElementById('authLegacyBox').classList.toggle('hidden', !(isReg && loadLegacyDB()));
+            document.getElementById('authPassword').autocomplete = isReg ? 'new-password' : 'current-password';
+            document.getElementById('authSubmit').textContent = isReg ? '建立帳號並開始記帳' : '登入';
+            setAuthError('');
+        }
+
+        function showAuthScreen() {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authPassword2').value = '';
+            const users = getUsers();
+            const hasUsers = Object.keys(users).length > 0;
+            setAuthMode(hasUsers ? 'login' : 'register');
+            const last = localStorage.getItem(LAST_USER_KEY);
+            document.getElementById('authUsername').value = hasUsers && last ? last : '';
+            setTimeout(() => document.getElementById(last && hasUsers ? 'authPassword' : 'authUsername').focus(), 50);
+        }
+
+        async function enterApp(user, key, data) {
+            currentUser = user;
+            currentKey = key;
+            db = data;
+            try {
+                const raw = await crypto.subtle.exportKey('raw', key);
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, key: toB64(raw) }));
+            } catch (e) {}
+            localStorage.setItem(LAST_USER_KEY, user.name);
+            document.getElementById('userNameLabel').textContent = user.name;
+            document.getElementById('userAvatar').textContent = (Array.from(user.name)[0] || '?').toUpperCase();
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authPassword2').value = '';
+            setDefaultDates();
+            switchTab('dashboard');
+            runRecurring();
+            renderAll();
+        }
+
+        function logout() {
+            currentUser = null;
+            currentKey = null;
+            sessionStorage.removeItem(SESSION_KEY);
+            db = defaultDB();
+            closeModal('modalTx');
+            closeModal('modalAccount');
+            renderAll();
+            showAuthScreen();
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('authSubmit');
+            const name = document.getElementById('authUsername').value.trim();
+            const pw = document.getElementById('authPassword').value;
+            const id = name.toLowerCase();
+            setAuthError('');
+
+            if (!window.crypto || !crypto.subtle) {
+                setAuthError('此瀏覽器或開啟方式不支援加密功能，請改用新版 Chrome / Safari / Edge 開啟。');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+            try {
+                const users = getUsers();
+                if (authMode === 'register') {
+                    if (name.length < 2 || name.length > 20) throw new Error('使用者名稱需為 2–20 個字元');
+                    if (pw.length < 6) throw new Error('密碼至少需要 6 個字元');
+                    if (pw !== document.getElementById('authPassword2').value) throw new Error('兩次輸入的密碼不一致');
+                    if (users[id]) throw new Error('這個使用者名稱已被使用，請換一個');
+
+                    const salt = crypto.getRandomValues(new Uint8Array(16));
+                    const key = await deriveKey(pw, salt);
+                    const legacy = document.getElementById('authLegacy').checked ? loadLegacyDB() : null;
+                    const data = legacy || defaultDB();
+
+                    localStorage.setItem(DATA_PREFIX + id, JSON.stringify(await encryptText(key, JSON.stringify(data))));
+                    users[id] = { name, salt: toB64(salt) };
+                    setUsers(users);
+                    if (legacy) LEGACY_KEYS.forEach(k => localStorage.removeItem(k));
+                    await enterApp({ id, name }, key, data);
+                    showToast(legacy ? '帳號建立完成，舊資料已匯入' : '帳號建立完成，歡迎使用！');
+                } else {
+                    const u = users[id];
+                    const blob = u && readBlob(id);
+                    if (!u || !blob) throw new Error('帳號或密碼錯誤');
+                    const key = await deriveKey(pw, fromB64(u.salt));
+                    let data;
+                    try { data = parseDB(await decryptText(key, blob)); }
+                    catch (err) { throw new Error('帳號或密碼錯誤'); }
+                    await enterApp({ id, name: u.name }, key, data);
+                    showToast(`歡迎回來，${u.name}`);
+                }
+            } catch (err) {
+                setAuthError(err.message || '發生未知錯誤，請再試一次');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60');
+            }
+        }
+
+        // 同一個分頁重新整理時，免重新輸入密碼（分頁關閉即失效）
+        async function restoreSession() {
+            try {
+                const s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+                const u = s && getUsers()[s.id];
+                const blob = u && readBlob(s.id);
+                if (!u || !blob) throw new Error('no session');
+                const key = await crypto.subtle.importKey('raw', fromB64(s.key), { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+                const data = parseDB(await decryptText(key, blob));
+                await enterApp({ id: s.id, name: u.name }, key, data);
+            } catch (e) {
+                sessionStorage.removeItem(SESSION_KEY);
+                showAuthScreen();
+            }
+        }
+
+        function bindAuthEvents() {
+            document.getElementById('formAuth').addEventListener('submit', handleAuthSubmit);
+            document.getElementById('authTabLogin').addEventListener('click', () => setAuthMode('login'));
+            document.getElementById('authTabRegister').addEventListener('click', () => setAuthMode('register'));
+            document.getElementById('btnLogoutDesktop').addEventListener('click', logout);
+            document.getElementById('btnLogoutMobile').addEventListener('click', logout);
+
+            document.getElementById('btnDeleteAccount').addEventListener('click', () => {
+                if (!currentUser) return;
+                if (!confirm(`確定要永久刪除使用者帳號「${currentUser.name}」與其所有資料嗎？此動作無法復原。`)) return;
+                const id = currentUser.id;
+                const users = getUsers();
+                delete users[id];
+                setUsers(users);
+                saveQueue = saveQueue.then(() => localStorage.removeItem(DATA_PREFIX + id));
+                logout();
+            });
+        }
 
         // Init App
         window.addEventListener('DOMContentLoaded', () => {
             setDefaultDates();
             bindEvents();
+            bindAuthEvents();
+            bindExtraEvents();
             renderAll();
             calculateBillSplitter();
             calculateSalary();
+            restoreSession();
         });
 
-        function saveDB() {
-            localStorage.setItem('muji_campus_tx', JSON.stringify(db.transactions));
-            localStorage.setItem('muji_campus_acc', JSON.stringify(db.accounts));
-            localStorage.setItem('muji_campus_budget', JSON.stringify(db.monthlyBudget));
-            localStorage.setItem('muji_campus_alert', JSON.stringify(db.alertThreshold));
-            renderAll();
+        // ================= 擴充功能：主題色 / 隱藏結餘 / 跨月比較 / 固定收支 / 連續記帳 / 智能排序 =================
+        const THEME_PRESETS = ['#8c2e2b', '#6b7c6c', '#2f6f9f', '#c0692b', '#7a4e9c'];
+        const pad2 = n => String(n).padStart(2, '0');
+        const todayStr = () => new Date().toLocaleDateString('sv-SE');
+
+        function applyTheme() {
+            const c = db.theme || '#8c2e2b';
+            const n = parseInt(c.slice(1), 16);
+            const hover = '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => pad2(Math.round(v * 0.8).toString(16))).join('');
+            let el = document.getElementById('themeStyle');
+            if (!el) { el = document.createElement('style'); el.id = 'themeStyle'; document.head.appendChild(el); }
+            el.textContent = `.bg-muji-red{background-color:${c}!important}.text-muji-red{color:${c}!important}.border-muji-red{border-color:${c}!important}.hover\\:bg-muji-redHover:hover{background-color:${hover}!important}.hover\\:text-muji-red:hover{color:${c}!important}.muji-input:focus{border-color:${c}!important}.nav-tab.active{color:${c}!important}`;
+        }
+
+        function renderStreak() {
+            const days = new Set(db.transactions.map(t => t.date));
+            const d = new Date();
+            if (!days.has(d.toLocaleDateString('sv-SE'))) d.setDate(d.getDate() - 1);
+            let n = 0;
+            while (days.has(d.toLocaleDateString('sv-SE'))) { n++; d.setDate(d.getDate() - 1); }
+            document.getElementById('streakBadge').textContent = `🔥 連續記帳 ${n} 天`;
+        }
+
+        function renderCompare() {
+            const ym = document.getElementById('dashMonthFilter').value;
+            if (!ym) return;
+            const [y, m] = ym.split('-').map(Number);
+            const pv = new Date(y, m - 2, 1);
+            const pym = `${pv.getFullYear()}-${pad2(pv.getMonth() + 1)}`;
+            const sum = k => {
+                const o = {};
+                db.transactions.forEach(t => { if (t.type === 'expense' && t.date.startsWith(k)) o[t.category] = (o[t.category] || 0) + parseFloat(t.amount); });
+                return o;
+            };
+            const cur = sum(ym), pre = sum(pym);
+            document.getElementById('cmpLabel').textContent = `${ym} vs ${pym}`;
+            const cats = [...new Set([...Object.keys(cur), ...Object.keys(pre)])].sort((a, b) => (cur[b] || 0) - (cur[a] || 0)).slice(0, 6);
+            const box = document.getElementById('cmpList');
+            if (!cats.length) { box.innerHTML = '<p class="text-xs text-muji-lightMuted py-4 text-center">這兩個月都還沒有支出紀錄</p>'; return; }
+            box.innerHTML = cats.map(c => {
+                const a = cur[c] || 0, d = a - (pre[c] || 0);
+                const tag = d > 0 ? `<span class="text-muji-red">↑ NT$ ${d.toLocaleString()}</span>`
+                    : d < 0 ? `<span class="text-muji-sage">↓ NT$ ${Math.abs(d).toLocaleString()}</span>`
+                    : '<span class="text-muji-lightMuted">持平</span>';
+                return `<div class="py-2.5 flex items-center justify-between text-xs"><span class="font-bold text-muji-text">${c}</span><div class="text-right"><span class="font-mono font-bold block">NT$ ${a.toLocaleString()}</span><span class="text-[10px] font-mono">${tag}</span></div></div>`;
+            }).join('');
+        }
+
+        function applyBalanceMask() {
+            document.getElementById('btnToggleBalance').innerHTML = `<i class="fa-solid ${db.hideBalance ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+            if (!db.hideBalance) return;
+            document.querySelectorAll('#dashAccountsGrid .font-mono.font-semibold, #accountsGrid p.font-mono').forEach(e => e.textContent = 'NT$ ••••••');
+            document.getElementById('kpiNet').textContent = '淨收支 ••••';
+        }
+
+        function getSortedCategories(type) {
+            const list = [...(STUDENT_CATEGORIES[type] || STUDENT_CATEGORIES.expense)];
+            if (!db.smartSort) return list;
+            const cnt = {};
+            db.transactions.forEach(t => { cnt[t.category] = (cnt[t.category] || 0) + 1; });
+            return list.sort((a, b) => (cnt[b.name] || 0) - (cnt[a.name] || 0));
+        }
+
+        // 到期的固定收支自動入帳（登入與新增時執行）
+        function runRecurring() {
+            const today = todayStr();
+            const [ty, tm] = today.split('-').map(Number);
+            let changed = false, seq = 0;
+            (db.recurring || []).forEach(r => {
+                let [y, m] = r.created.split('-').map(Number);
+                while (y < ty || (y === ty && m <= tm)) {
+                    const date = `${y}-${pad2(m)}-${pad2(Math.min(r.day, new Date(y, m, 0).getDate()))}`;
+                    if (date >= r.created && date <= today && (!r.end || date <= r.end) && (!r.lastRun || date > r.lastRun)) {
+                        const acc = db.accounts.find(a => a.id === r.accountId);
+                        if (acc) acc.balance = parseFloat(acc.balance) + (r.type === 'expense' ? -1 : 1) * r.amount;
+                        db.transactions.push({ id: `tx_${Date.now()}_${seq++}`, type: r.type, amount: r.amount, category: r.category, accountId: r.accountId, date, note: `${r.name}（固定收支）` });
+                        r.lastRun = date;
+                        changed = true;
+                    }
+                    if (++m > 12) { m = 1; y++; }
+                }
+            });
+            if (changed) persistDB();
+        }
+
+        function renderRecurring() {
+            const box = document.getElementById('recurList');
+            const list = db.recurring || [];
+            box.innerHTML = list.length ? list.map(r => {
+                const acc = db.accounts.find(a => a.id === r.accountId), inc = r.type === 'income';
+                return `<div class="muji-card p-4 flex items-center justify-between"><div class="min-w-0"><span class="font-bold text-sm text-muji-text block truncate">${r.name}</span><span class="text-[11px] text-muji-muted">${r.category} · 每月${r.day}日 · ${r.end ? '至 ' + r.end : '無限期'} · ${acc ? acc.name : '-'}</span></div><div class="flex items-center space-x-3 shrink-0"><span class="font-mono font-bold ${inc ? 'text-muji-sage' : 'text-muji-red'}">${inc ? '+' : '-'}NT$ ${r.amount.toLocaleString()}</span><button onclick="deleteRecurring('${r.id}')" class="text-muji-lightMuted hover:text-rose-600"><i class="fa-solid fa-trash-can text-xs"></i></button></div></div>`;
+            }).join('') : '<div class="sm:col-span-2 muji-card text-center py-12 text-xs text-muji-muted">還沒有固定收支，試試新增薪資、房租或訂閱服務</div>';
+            const sel = document.getElementById('recurAccount'), pv = sel.value;
+            sel.innerHTML = db.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+            if (pv) sel.value = pv;
+        }
+
+        function fillRecurCategories() {
+            const t = document.getElementById('recurType').value;
+            document.getElementById('recurCategory').innerHTML = STUDENT_CATEGORIES[t].map(c => `<option>${c.name}</option>`).join('');
+        }
+
+        function deleteRecurring(id) {
+            if (confirm('刪除這個固定收支？已入帳的紀錄會保留。')) {
+                db.recurring = db.recurring.filter(r => r.id !== id);
+                saveDB();
+            }
+        }
+
+        function renderExtras() {
+            applyTheme();
+            renderStreak();
+            renderCompare();
+            renderRecurring();
+            applyBalanceMask();
+            document.getElementById('prefHideBalance').checked = !!db.hideBalance;
+            document.getElementById('prefSmartSort').checked = !!db.smartSort;
+            document.getElementById('themeColorInput').value = db.theme || '#8c2e2b';
+            document.getElementById('themeSwatches').innerHTML = THEME_PRESETS.map(c =>
+                `<button type="button" data-color="${c}" class="w-7 h-7 rounded-full border-2 ${c === db.theme ? 'border-muji-text' : 'border-white'} shadow" style="background:${c}"></button>`).join('');
+        }
+
+        function bindExtraEvents() {
+            fillRecurCategories();
+            document.getElementById('recurType').addEventListener('change', fillRecurCategories);
+            document.getElementById('formRecur').addEventListener('submit', e => {
+                e.preventDefault();
+                const g = id => document.getElementById(id).value;
+                db.recurring.push({
+                    id: 'rec_' + Date.now(), type: g('recurType'), name: g('recurName').trim(), amount: parseFloat(g('recurAmount')),
+                    category: g('recurCategory'), accountId: g('recurAccount'),
+                    day: Math.min(31, Math.max(1, parseInt(g('recurDay')) || 1)), end: g('recurEnd') || '',
+                    created: todayStr(), lastRun: ''
+                });
+                runRecurring();
+                saveDB();
+                closeModal('modalRecurring');
+                e.target.reset();
+                fillRecurCategories();
+                showToast('已新增固定收支');
+            });
+            document.getElementById('btnToggleBalance').addEventListener('click', () => { db.hideBalance = !db.hideBalance; saveDB(); });
+            document.getElementById('prefHideBalance').addEventListener('change', e => { db.hideBalance = e.target.checked; saveDB(); });
+            document.getElementById('prefSmartSort').addEventListener('change', e => { db.smartSort = e.target.checked; saveDB(); });
+            document.getElementById('themeSwatches').addEventListener('click', e => {
+                const b = e.target.closest('button');
+                if (b) { db.theme = b.dataset.color; saveDB(); }
+            });
+            document.getElementById('themeColorInput').addEventListener('change', e => { db.theme = e.target.value; saveDB(); });
         }
 
         function setDefaultDates() {
@@ -717,6 +1258,7 @@
             populateDropdowns();
             renderDashChart();
             syncSettingsForm();
+            renderExtras();
         }
 
         function renderTightBudgetAlert() {
@@ -976,7 +1518,7 @@
             const type = document.getElementById('txType').value;
             const select = document.getElementById('txCategory');
             select.innerHTML = '';
-            (STUDENT_CATEGORIES[type] || STUDENT_CATEGORIES.expense).forEach(c => {
+            getSortedCategories(type).forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.name;
                 opt.textContent = c.name;
@@ -1241,7 +1783,7 @@
                     try {
                         const imported = JSON.parse(event.target.result);
                         if (imported && imported.accounts && imported.transactions) {
-                            db = imported;
+                            db = Object.assign(defaultDB(), imported);
                             saveDB();
                             showToast('成功匯入 JSON 備份資料！');
                         } else {
@@ -1269,9 +1811,10 @@
             });
 
             document.getElementById('btnClearData').addEventListener('click', () => {
-                if (confirm('確定要清空所有資料嗎？清空後初次開啟將維持全空狀態。')) {
-                    localStorage.clear();
-                    location.reload();
+                if (confirm('確定要清空此帳號的所有記帳紀錄與帳戶嗎？（其他使用者的資料不受影響）')) {
+                    db = defaultDB();
+                    saveDB();
+                    showToast('已清空此帳號的資料');
                 }
             });
         }
