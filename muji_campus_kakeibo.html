@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>無印校園記帳 - MUJI Campus Kakeibo</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        muji: {
+                            bg: '#fbf9f5',
+                            card: '#ffffff',
+                            beige: '#f4f0ea',
+                            darkBeige: '#e7e1d5',
+                            red: '#8c2e2b',
+                            redHover: '#732422',
+                            brown: '#4a3e35',
+                            text: '#2e2e2e',
+                            muted: '#736e65',
+                            lightMuted: '#a39e93',
+                            border: '#e5dfd5',
+                            sage: '#6b7c6c',
+                            warningBg: '#fcf6ed',
+                            warningBorder: '#e8c89b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Noto Sans TC"', '"PingFang TC"', '"Helvetica Neue"', 'sans-serif'],
+                        mono: ['SFMono-Regular', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #fbf9f5;
+            color: #2e2e2e;
+            letter-spacing: 0.02em;
+        }
+        .muji-card {
+            background-color: #ffffff;
+            border: 1px solid #e5dfd5;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+        .muji-input {
+            background-color: #fbf9f5;
+            border: 1px solid #e5dfd5;
+            border-radius: 6px;
+            color: #2e2e2e;
+            transition: all 0.2s ease;
+        }
+        .muji-input:focus {
+            outline: none;
+            border-color: #8c2e2b;
+            background-color: #ffffff;
+        }
+        .nav-tab.active {
+            background-color: #ffffff;
+            color: #8c2e2b;
+            border: 1px solid #e5dfd5;
+            font-weight: 600;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #fbf9f5; }
+        ::-webkit-scrollbar-thumb { background: #e5dfd5; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a39e93; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row antialiased">
+
+    <!-- Sidebar Navigation -->
+    <aside class="hidden md:flex flex-col w-64 bg-[#f4f0ea] border-r border-muji-border p-6 sticky top-0 h-screen justify-between z-20">
+        <div>
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-muji-border">
+                <div class="w-9 h-9 bg-muji-red rounded flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm">
+                    無
+                </div>
+                <div>
+                    <h1 class="font-bold text-base tracking-widest text-muji-text">無印校園記帳</h1>
+                    <p class="text-[10px] text-muji-lightMuted tracking-wider font-mono">CAMPUS KAKEIBO</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1.5" id="desktopNav">
+                <button data-tab="dashboard" class="nav-tab active w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-compass w-4 text-center"></i>
+                    <span>生活概覽與吃土預警</span>
+                </button>
+                <button data-tab="transactions" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-list-check w-4 text-center"></i>
+                    <span>交易明細與搜尋</span>
+                </button>
+                <button data-tab="accounts" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-wallet w-4 text-center"></i>
+                    <span>帳戶與銀行資產</span>
+                </button>
+                <button data-tab="splitter" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-calculator w-4 text-center"></i>
+                    <span>聚餐 AA 分帳算盤</span>
+                </button>
+                <button data-tab="salary" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-business-time w-4 text-center"></i>
+                    <span>打工時薪試算</span>
+                </button>
+                <button data-tab="settings" class="nav-tab w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-md text-xs text-muji-muted hover:bg-muji-beige transition">
+                    <i class="fa-solid fa-sliders w-4 text-center"></i>
+                    <span>預算與資料備份</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Action -->
+        <div class="pt-4 border-t border-muji-border">
+            <button id="btnSidebarQuickAdd" class="w-full py-2.5 bg-muji-red hover:bg-muji-redHover text-white font-medium text-xs rounded-md shadow-sm transition flex items-center justify-center space-x-2 tracking-wider">
+                <i class="fa-solid fa-plus"></i>
+                <span>新增一筆記帳</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden flex items-center justify-between px-4 py-3 bg-[#f4f0ea] border-b border-muji-border sticky top-0 z-30">
+        <div class="flex items-center space-x-2">
+            <div class="w-7 h-7 bg-muji-red rounded flex items-center justify-center text-white font-serif font-bold text-sm">
+                無
+            </div>
+            <span class="font-bold text-xs tracking-wider text-muji-text">無印校園記帳</span>
+        </div>
+        <button id="btnMobileQuickAdd" class="bg-muji-red text-white p-2 rounded-md shadow-sm">
+            <i class="fa-solid fa-plus w-4 h-4 text-center"></i>
+        </button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 sm:p-8 max-w-5xl mx-auto w-full space-y-6 pb-24 md:pb-8">
+
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <div id="tab-dashboard" class="tab-content space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-muji-border">
+                <div>
+                    <h2 class="text-xl font-bold tracking-wide text-muji-text">大學生活財務總覽</h2>
+                    <p class="text-xs text-muji-muted mt-0.5">理性掌控生活費，質感度過大學學期</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="month" id="dashMonthFilter" class="muji-input px-3 py-1.5 text-xs font-mono">
+                </div>
+            </div>
+
+            <!-- TIGHT BUDGET ALERT METER -->
+            <div id="tightBudgetCard" class="muji-card p-5 bg-muji-warningBg border-muji-warningBorder space-y-3 relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-muji-warningBorder/60 pb-3">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 text-sm font-bold">
+                            <i class="fa-solid fa-bowl-food"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-muji-text tracking-wider uppercase">月底吃土預警指標</h3>
+                            <p class="text-[11px] text-muji-muted">距離本月結束還有 <span id="daysRemaining" class="font-mono font-bold text-muji-text">--</span> 天</p>
+                        </div>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-[10px] text-muji-muted block">今日平均可用額度</span>
+                        <span id="dailyAllowance" class="text-xl font-bold font-mono text-muji-red">NT$ 0 / 天</span>
+                    </div>
+                </div>
+
+                <div id="tightBudgetStatus" class="flex items-center justify-between text-xs">
+                    <span id="tightBudgetMsg" class="font-medium text-muji-brown">評估計算中...</span>
+                    <button onclick="switchTab('settings')" class="text-[11px] text-muji-red hover:underline">設定預算 →</button>
+                </div>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="muji-card p-5 space-y-1.5">
+                    <span class="text-[11px] font-medium text-muji-muted uppercase tracking-wider">本月生活費預算</span>
+                    <h3 id="kpiBudget" class="text-2xl font-bold text-muji-text font-mono">NT$ 0</h3>
+                    <div class="w-full bg-muji-beige h-1.5 rounded-full overflow-hidden mt-2">
+                        <div id="kpiBudgetBar" class="bg-muji-red h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="muji-card p-5 space-y-1.5">
+                    <span class="text-[11px] font-medium text-muji-muted uppercase tracking-wider">本月總花費</span>
+                    <h3 id="kpiExpense" class="text-2xl font-bold text-muji-red font-mono">NT$ 0</h3>
+                    <p id="kpiDailyAvg" class="text-[11px] text-muji-lightMuted">日均花費 NT$ 0</p>
+                </div>
+
+                <div class="muji-card p-5 space-y-1.5">
+                    <span class="text-[11px] font-medium text-muji-muted uppercase tracking-wider">本月總收入/生活費</span>
+                    <h3 id="kpiIncome" class="text-2xl font-bold text-muji-sage font-mono">NT$ 0</h3>
+                    <p id="kpiNet" class="text-[11px] text-muji-lightMuted">淨收支 NT$ 0</p>
+                </div>
+            </div>
+
+            <!-- Account Summary Row -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase">個人帳戶與錢包資產</h3>
+                    <button onclick="switchTab('accounts')" class="text-xs text-muji-red hover:underline">帳戶管理 / 新增帳戶 →</button>
+                </div>
+                <div id="dashAccountsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+            </div>
+
+            <!-- Recent Transactions & Category Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 muji-card p-5 space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-muji-border">
+                        <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase">最近消費紀錄</h3>
+                        <button onclick="switchTab('transactions')" class="text-xs text-muji-red hover:underline">完整明細</button>
+                    </div>
+                    <div id="dashRecentList" class="divide-y divide-muji-border"></div>
+                </div>
+
+                <div class="muji-card p-5 space-y-3">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase pb-2 border-b border-muji-border">本月支出類別占比</h3>
+                    <div class="relative h-56 flex items-center justify-center">
+                        <canvas id="chartDashCategory"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: TRANSACTIONS ================= -->
+        <div id="tab-transactions" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-muji-border">
+                <div>
+                    <h2 class="text-xl font-bold tracking-wide text-muji-text">交易明細紀錄</h2>
+                    <p class="text-xs text-muji-muted mt-0.5">依日期分類歸檔，支援靈活條件搜尋與編輯</p>
+                </div>
+                <button onclick="openModal('modalTx')" class="px-3.5 py-1.5 bg-muji-red hover:bg-muji-redHover text-white text-xs font-medium rounded shadow-sm transition">
+                    + 新增記帳
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="muji-card p-4 space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div class="relative">
+                        <input type="text" id="txSearchInput" placeholder="搜尋手搖飲、教科書、備註..." class="muji-input w-full pl-8 pr-3 py-1.5 text-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-muji-lightMuted text-xs"></i>
+                    </div>
+                    <select id="txFilterType" class="muji-input px-3 py-1.5 text-xs">
+                        <option value="all">所有收支類型</option>
+                        <option value="expense">支出</option>
+                        <option value="income">收入</option>
+                        <option value="transfer">帳戶轉帳</option>
+                    </select>
+                    <select id="txFilterAccount" class="muji-input px-3 py-1.5 text-xs">
+                        <option value="all">所有帳戶</option>
+                    </select>
+                    <input type="month" id="txFilterMonth" class="muji-input px-3 py-1.5 text-xs font-mono">
+                </div>
+            </div>
+
+            <!-- Transactions List Container -->
+            <div id="txGroupedContainer" class="space-y-4"></div>
+            <div id="txEmptyState" class="hidden text-center py-12 muji-card space-y-2">
+                <i class="fa-regular fa-folder-open text-3xl text-muji-lightMuted"></i>
+                <p class="text-xs text-muji-muted">這個月份目前沒有記帳明細</p>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: ACCOUNTS ================= -->
+        <div id="tab-accounts" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-muji-border">
+                <div>
+                    <h2 class="text-xl font-bold tracking-wide text-muji-text">帳戶與資產管理</h2>
+                    <p class="text-xs text-muji-muted mt-0.5">自主新增銀行、數位帳戶、現金與電子支付</p>
+                </div>
+                <button onclick="openModal('modalAccount')" class="px-3.5 py-1.5 bg-muji-brown hover:bg-muji-text text-white text-xs font-medium rounded shadow-sm transition">
+                    + 新增帳戶 / 銀行
+                </button>
+            </div>
+
+            <div id="accountsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- ================= TAB 4: AA BILL SPLITTER ================= -->
+        <div id="tab-splitter" class="tab-content space-y-6 hidden">
+            <div class="pb-2 border-b border-muji-border">
+                <h2 class="text-xl font-bold tracking-wide text-muji-text">社團與聚餐 AA 分帳算盤</h2>
+                <p class="text-xs text-muji-muted mt-0.5">迅速計算均分金額與服務費，複製訊息傳送至 Line 班群</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="muji-card p-5 space-y-4">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">1. 聚餐費用設定</h3>
+                    <form id="formSplitter" class="space-y-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">活動 / 聚餐名稱</label>
+                            <input type="text" id="splitTitle" placeholder="如：熱舞社社聚、系烤、宿營水電" value="系烤聚餐" class="muji-input w-full p-2 text-xs">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">消費總金額 (NT$)</label>
+                                <input type="number" id="splitTotal" placeholder="2000" value="1800" class="muji-input w-full p-2 font-mono text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">總人數</label>
+                                <input type="number" id="splitPeople" min="1" placeholder="4" value="4" class="muji-input w-full p-2 font-mono text-xs">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">服務費 / 稅金 (%)</label>
+                                <input type="number" id="splitTax" placeholder="10" value="10" class="muji-input w-full p-2 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">已先墊款 (NT$)</label>
+                                <input type="number" id="splitPrepaid" placeholder="0" value="0" class="muji-input w-full p-2 font-mono text-xs">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">收款轉帳帳號 / 提示</label>
+                            <input type="text" id="splitNote" placeholder="如：國泰 (013) 12345xxxx 或 LINE Pay" class="muji-input w-full p-2 text-xs">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="muji-card p-5 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">2. 計算結果與 Line 通知訊息</h3>
+                        
+                        <div class="p-4 bg-muji-beige/60 rounded space-y-2 border border-muji-border">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs text-muji-muted">總金額 (含服務費)</span>
+                                <span id="splitResGrandTotal" class="text-sm font-mono font-bold text-muji-text">NT$ 1,980</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-muji-text">每人平均應付</span>
+                                <span id="splitResPerPerson" class="text-xl font-mono font-bold text-muji-red">NT$ 495</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">生成 Line 群組訊息</label>
+                            <textarea id="splitLineText" rows="5" readonly class="muji-input w-full p-2.5 text-xs font-mono leading-relaxed resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <button id="btnCopySplitMsg" class="w-full py-2.5 bg-muji-brown hover:bg-muji-text text-white text-xs font-medium rounded transition flex items-center justify-center space-x-2">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>複製分帳訊息到剪貼簿</span>
+                        </button>
+                        <button id="btnAddSplitToTx" class="w-full py-2 bg-muji-beige hover:bg-muji-darkBeige text-muji-red text-xs font-medium rounded transition flex items-center justify-center space-x-2 border border-muji-border">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>將我的金額 (均分額) 寫入記帳</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 5: PART-TIME SALARY ================= -->
+        <div id="tab-salary" class="tab-content space-y-6 hidden">
+            <div class="pb-2 border-b border-muji-border">
+                <h2 class="text-xl font-bold tracking-wide text-muji-text">打工時薪與薪資算盤</h2>
+                <p class="text-xs text-muji-muted mt-0.5">精算本月預計打工總收入，快速記入為當月預算</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="muji-card p-5 space-y-4">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">排班參數設定</h3>
+                    <form id="formSalary" class="space-y-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">兼職 / 打工單位名稱</label>
+                            <input type="text" id="salJobName" placeholder="如：校園圖書館、星巴克、家教" value="校園圖書館工讀" class="muji-input w-full p-2 text-xs">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">時薪 (NT$/hr)</label>
+                                <input type="number" id="salHourly" placeholder="190" value="190" class="muji-input w-full p-2 font-mono text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">每週平均工時 (小時)</label>
+                                <input type="number" id="salWeeklyHours" placeholder="10" value="12" class="muji-input w-full p-2 font-mono text-xs">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">本月排班週數</label>
+                            <select id="salWeeks" class="muji-input w-full p-2 text-xs">
+                                <option value="4">4 週 (標準月)</option>
+                                <option value="4.33" selected>4.33 週 (平均月)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">額外津貼 / 加班加成 (NT$)</label>
+                            <input type="number" id="salBonus" placeholder="0" value="0" class="muji-input w-full p-2 font-mono text-xs">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="muji-card p-5 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">預估收入結果</h3>
+                        <div class="p-5 bg-muji-beige/60 rounded border border-muji-border space-y-2 text-center">
+                            <span class="text-xs text-muji-muted block">本月預估打工總薪資</span>
+                            <span id="salResTotal" class="text-3xl font-mono font-bold text-muji-sage block">NT$ 9,867</span>
+                            <span id="salResHours" class="text-[11px] text-muji-lightMuted block">總工時約 52 小時</span>
+                        </div>
+                    </div>
+
+                    <button id="btnAddSalaryToTx" class="w-full py-2.5 bg-muji-sage hover:opacity-90 text-white text-xs font-medium rounded transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span>加入為本月預估收入紀錄</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 6: SETTINGS & BACKUP ================= -->
+        <div id="tab-settings" class="tab-content space-y-6 hidden">
+            <div class="pb-2 border-b border-muji-border">
+                <h2 class="text-xl font-bold tracking-wide text-muji-text">預算與資料備份</h2>
+                <p class="text-xs text-muji-muted mt-0.5">設定每月生活費預算、吃土門檻與本機資料匯出匯入</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="muji-card p-5 space-y-4">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">預算與吃土門檻設定</h3>
+                    <form id="formBudgetSettings" class="space-y-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">每月生活費總預算 (NT$)</label>
+                            <input type="number" id="settingBudget" required class="muji-input w-full p-2 text-xs font-mono font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">每日吃土預警門檻 (NT$/天)</label>
+                            <input type="number" id="settingAlertThreshold" required class="muji-input w-full p-2 text-xs font-mono">
+                            <p class="text-[10px] text-muji-lightMuted mt-1">當每日剩餘平均可用金額低於此門檻時，會顯示吃土提示。</p>
+                        </div>
+                        <button type="submit" class="w-full py-2 bg-muji-red hover:bg-muji-redHover text-white text-xs font-medium rounded transition">
+                            儲存預算設定
+                        </button>
+                    </form>
+                </div>
+
+                <div class="muji-card p-5 space-y-4">
+                    <h3 class="text-xs font-bold text-muji-muted tracking-wider uppercase border-b border-muji-border pb-2">資料備份與管理</h3>
+                    <div class="space-y-2.5">
+                        <button id="btnExportJSON" class="w-full py-2 px-3 bg-muji-beige hover:bg-muji-darkBeige text-muji-text text-xs font-medium rounded transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-download text-muji-brown"></i>
+                            <span>匯出 JSON 完整資料備份</span>
+                        </button>
+                        
+                        <label class="w-full py-2 px-3 bg-muji-beige hover:bg-muji-darkBeige text-muji-text text-xs font-medium rounded transition flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-upload text-muji-brown"></i>
+                            <span>匯入 JSON 備份檔案</span>
+                            <input type="file" id="importJSONInput" accept=".json" class="hidden">
+                        </label>
+
+                        <button id="btnExportCSV" class="w-full py-2 px-3 bg-muji-beige hover:bg-muji-darkBeige text-muji-text text-xs font-medium rounded transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-file-csv text-muji-brown"></i>
+                            <span>匯出 CSV 報表 (Excel 適用)</span>
+                        </button>
+
+                        <button id="btnClearData" class="w-full py-2 px-3 border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-medium rounded transition flex items-center justify-center space-x-2 mt-4">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>清空所有記帳紀錄與帳戶</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#f4f0ea] border-t border-muji-border px-2 py-1.5 z-40 flex justify-around">
+        <button data-tab="dashboard" class="nav-tab active flex flex-col items-center p-1.5 text-muji-muted">
+            <i class="fa-solid fa-compass text-sm"></i>
+            <span class="text-[9px] font-medium mt-0.5">概覽</span>
+        </button>
+        <button data-tab="transactions" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
+            <i class="fa-solid fa-list-check text-sm"></i>
+            <span class="text-[9px] font-medium mt-0.5">明細</span>
+        </button>
+        <button data-tab="accounts" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
+            <i class="fa-solid fa-wallet text-sm"></i>
+            <span class="text-[9px] font-medium mt-0.5">帳戶</span>
+        </button>
+        <button data-tab="splitter" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
+            <i class="fa-solid fa-calculator text-sm"></i>
+            <span class="text-[9px] font-medium mt-0.5">分帳</span>
+        </button>
+        <button data-tab="salary" class="nav-tab flex flex-col items-center p-1.5 text-muji-muted">
+            <i class="fa-solid fa-business-time text-sm"></i>
+            <span class="text-[9px] font-medium mt-0.5">打工</span>
+        </button>
+    </nav>
+
+    <!-- Modal: Transaction Entry -->
+    <div id="modalTx" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm hidden">
+        <div class="muji-card bg-white w-full max-w-sm p-6 space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modalTx')" class="absolute top-4 right-4 text-muji-lightMuted hover:text-muji-text">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-sm font-bold tracking-wider text-muji-text">記一筆帳</h3>
+
+            <form id="formTx" class="space-y-3">
+                <div class="grid grid-cols-3 gap-1 p-1 bg-muji-beige rounded text-xs font-medium text-center">
+                    <button type="button" id="tabExpense" onclick="setTxType('expense')" class="py-1 rounded bg-white text-muji-red font-bold shadow-sm">支出</button>
+                    <button type="button" id="tabIncome" onclick="setTxType('income')" class="py-1 rounded text-muji-muted">收入</button>
+                    <button type="button" id="tabTransfer" onclick="setTxType('transfer')" class="py-1 rounded text-muji-muted">轉帳</button>
+                </div>
+                <input type="hidden" id="txType" value="expense">
+
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">金額 (NT$)</label>
+                    <input type="number" id="txAmount" required placeholder="0" min="1" step="1" class="muji-input w-full p-2.5 font-mono text-xl font-bold text-muji-text">
+                </div>
+
+                <div id="singleAccSelect">
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">選擇帳戶 / 錢包</label>
+                    <select id="txAccount" class="muji-input w-full p-2 text-xs font-medium"></select>
+                </div>
+
+                <div id="transferAccSelect" class="grid grid-cols-2 gap-2 hidden">
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">轉出帳戶</label>
+                        <select id="txAccountFrom" class="muji-input w-full p-2 text-xs font-medium"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">轉入帳戶</label>
+                        <select id="txAccountTo" class="muji-input w-full p-2 text-xs font-medium"></select>
+                    </div>
+                </div>
+
+                <div id="categorySelectBox">
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">消費類別</label>
+                    <select id="txCategory" class="muji-input w-full p-2 text-xs font-medium"></select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">日期</label>
+                    <input type="date" id="txDate" required class="muji-input w-full p-2 text-xs font-mono">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">備註說明</label>
+                    <input type="text" id="txNote" placeholder="如：燕麥拿鐵、二手講義、家教" class="muji-input w-full p-2 text-xs">
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-muji-red hover:bg-muji-redHover text-white font-medium text-xs rounded transition mt-2 tracking-wider">
+                    儲存紀錄
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Account (Rich Bank Options) -->
+    <div id="modalAccount" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm hidden">
+        <div class="muji-card bg-white w-full max-w-sm p-6 space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modalAccount')" class="absolute top-4 right-4 text-muji-lightMuted hover:text-muji-text">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-sm font-bold tracking-wider text-muji-text">新增帳戶 / 銀行 / 電子支付</h3>
+            
+            <form id="formAccount" class="space-y-3">
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">選擇常見銀行 / 帳戶範本</label>
+                    <select id="accPresetSelect" onchange="onAccountPresetChange(this.value)" class="muji-input w-full p-2 text-xs font-medium">
+                        <option value="custom">-- 自訂名稱 --</option>
+                        <optgroup label="常見數位銀行 / 帳戶">
+                            <option value="Cathay|bank|國泰 CUBE / KOKO">國泰世華 (CUBE/KOKO)</option>
+                            <option value="Taishin|bank|台新 Richart">台新銀行 (Richart)</option>
+                            <option value="CTBC|bank|中國信託">中國信託</option>
+                            <option value="Esun|bank|玉山銀行">玉山銀行</option>
+                            <option value="Fubon|bank|台北富邦">台北富邦</option>
+                            <option value="LineBank|bank|LINE Bank">LINE Bank</option>
+                            <option value="NextBank|bank|將來銀行">將來銀行</option>
+                            <option value="Post|bank|中華郵政">中華郵政</option>
+                            <option value="First|bank|第一銀行 iLEO">第一銀行 (iLEO)</option>
+                            <option value="O-Bank|bank|王道銀行">王道銀行</option>
+                            <option value="Union|bank|聯邦 New New Bank">聯邦銀行</option>
+                        </optgroup>
+                        <optgroup label="現金與電子支付 / 電子票證">
+                            <option value="Cash|cash|現金錢包">現金錢包</option>
+                            <option value="LinePay|epay|LINE Pay">LINE Pay</option>
+                            <option value="Jko|epay|街口支付">街口支付</option>
+                            <option value="EasyCard|card|學生悠遊卡">學生悠遊卡</option>
+                            <option value="Ipass|card|一卡通">一卡通</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">帳戶顯示名稱</label>
+                    <input type="text" id="accName" required placeholder="如：國泰 CUBE、LINE Pay、現金" class="muji-input w-full p-2 text-xs font-medium">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">金融類別</label>
+                    <select id="accType" class="muji-input w-full p-2 text-xs font-medium">
+                        <option value="bank">一般銀行 / 數位帳戶</option>
+                        <option value="epay">電子支付 (LINE Pay/街口)</option>
+                        <option value="card">電子票證 (悠遊卡/一卡通)</option>
+                        <option value="cash">現金錢包</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-muji-muted tracking-wider uppercase">初始餘額 (NT$)</label>
+                    <input type="number" id="accBalance" required placeholder="0" class="muji-input w-full p-2 font-mono text-xs">
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-muji-brown text-white font-medium text-xs rounded transition">確認新增帳戶</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-16 md:bottom-6 right-6 z-50 bg-muji-brown text-white px-4 py-2.5 rounded shadow-lg flex items-center space-x-2 text-xs font-medium opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+        <i class="fa-solid fa-circle-check text-muji-sage"></i>
+        <span id="toastMsg">提示訊息</span>
+    </div>
+
+    <script>
+        // Student Categories
+        const STUDENT_CATEGORIES = {
+            expense: [
+                { name: '外食/宵夜', icon: 'fa-utensils' },
+                { name: '手搖飲/咖啡', icon: 'fa-mug-hot' },
+                { name: '宿舍/房租', icon: 'fa-house-user' },
+                { name: '水電網費', icon: 'fa-bolt' },
+                { name: '教科書/講義', icon: 'fa-book' },
+                { name: '交通/機車加油', icon: 'fa-motorcycle' },
+                { name: '聚餐/社團', icon: 'fa-champagne-glasses' },
+                { name: '訂閱服務 (Spotify/Netflix)', icon: 'fa-compact-disc' },
+                { name: '服飾美妝', icon: 'fa-shirt' },
+                { name: '其他支出', icon: 'fa-ellipsis' }
+            ],
+            income: [
+                { name: '家長生活費', icon: 'fa-hand-holding-dollar' },
+                { name: '打工薪資', icon: 'fa-briefcase' },
+                { name: '家教/二手賣場', icon: 'fa-recycle' },
+                { name: '獎學金', icon: 'fa-graduation-cap' }
+            ]
+        };
+
+        // Initial State without default Post Office (Default only Cash & LINE Pay)
+        let db = {
+            transactions: JSON.parse(localStorage.getItem('muji_campus_tx')) || [],
+            accounts: JSON.parse(localStorage.getItem('muji_campus_acc')) || [
+                { id: 'acc_cash', name: '現金錢包', type: 'cash', balance: 0 },
+                { id: 'acc_linepay', name: 'LINE Pay / 街口', type: 'epay', balance: 0 }
+            ],
+            monthlyBudget: JSON.parse(localStorage.getItem('muji_campus_budget')) || 10000,
+            alertThreshold: JSON.parse(localStorage.getItem('muji_campus_alert')) || 150
+        };
+
+        let dashChartInstance = null;
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            setDefaultDates();
+            bindEvents();
+            renderAll();
+            calculateBillSplitter();
+            calculateSalary();
+        });
+
+        function saveDB() {
+            localStorage.setItem('muji_campus_tx', JSON.stringify(db.transactions));
+            localStorage.setItem('muji_campus_acc', JSON.stringify(db.accounts));
+            localStorage.setItem('muji_campus_budget', JSON.stringify(db.monthlyBudget));
+            localStorage.setItem('muji_campus_alert', JSON.stringify(db.alertThreshold));
+            renderAll();
+        }
+
+        function setDefaultDates() {
+            const ym = new Date().toISOString().substring(0, 7);
+            document.getElementById('dashMonthFilter').value = ym;
+            document.getElementById('txFilterMonth').value = ym;
+            document.getElementById('txDate').valueAsDate = new Date();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            if (tabId === 'dashboard') renderDashChart();
+        }
+
+        function renderAll() {
+            renderTightBudgetAlert();
+            renderKPIs();
+            renderDashAccounts();
+            renderRecentList();
+            renderGroupedTransactions();
+            renderAccountsGrid();
+            populateDropdowns();
+            renderDashChart();
+            syncSettingsForm();
+        }
+
+        function renderTightBudgetAlert() {
+            const ym = document.getElementById('dashMonthFilter').value;
+            const now = new Date();
+            const currentYM = now.toISOString().substring(0, 7);
+
+            const year = parseInt(ym.substring(0, 4));
+            const month = parseInt(ym.substring(5, 7));
+            const daysInMonth = new Date(year, month, 0).getDate();
+            
+            let daysRemaining = daysInMonth;
+            if (ym === currentYM) {
+                daysRemaining = Math.max(1, daysInMonth - now.getDate() + 1);
+            }
+
+            document.getElementById('daysRemaining').textContent = daysRemaining;
+
+            const monthTxs = db.transactions.filter(t => t.date.startsWith(ym));
+            let spent = 0;
+            monthTxs.forEach(t => { if (t.type === 'expense') spent += parseFloat(t.amount); });
+
+            const remainingBudget = Math.max(0, db.monthlyBudget - spent);
+            const dailyAvailable = Math.floor(remainingBudget / daysRemaining);
+
+            document.getElementById('dailyAllowance').textContent = `NT$ ${dailyAvailable.toLocaleString()} / 天`;
+
+            const msgEl = document.getElementById('tightBudgetMsg');
+            const cardEl = document.getElementById('tightBudgetCard');
+
+            if (spent > db.monthlyBudget) {
+                cardEl.className = "muji-card p-5 bg-rose-50 border-rose-200 space-y-3 relative overflow-hidden";
+                msgEl.textContent = "⚠️ 本月預算已透支！建議開啟省錢模式 🍵";
+                msgEl.className = "font-bold text-rose-700 text-xs";
+            } else if (dailyAvailable < db.alertThreshold) {
+                cardEl.className = "muji-card p-5 bg-amber-50 border-amber-200 space-y-3 relative overflow-hidden";
+                msgEl.textContent = `🚨 每日可用額度不足 NT$${db.alertThreshold}，建議控管外食與手搖飲支出 🍵`;
+                msgEl.className = "font-bold text-amber-800 text-xs";
+            } else {
+                cardEl.className = "muji-card p-5 bg-emerald-50/60 border-emerald-200 space-y-3 relative overflow-hidden";
+                msgEl.textContent = "✨ 財務狀態良好，每日可用額度充足";
+                msgEl.className = "font-medium text-emerald-800 text-xs";
+            }
+        }
+
+        function renderKPIs() {
+            const ym = document.getElementById('dashMonthFilter').value;
+            const monthTxs = db.transactions.filter(t => t.date.startsWith(ym));
+
+            let inc = 0, exp = 0;
+            monthTxs.forEach(t => {
+                if (t.type === 'income') inc += parseFloat(t.amount);
+                if (t.type === 'expense') exp += parseFloat(t.amount);
+            });
+
+            document.getElementById('kpiBudget').textContent = `NT$ ${db.monthlyBudget.toLocaleString()}`;
+            document.getElementById('kpiExpense').textContent = `NT$ ${exp.toLocaleString()}`;
+            document.getElementById('kpiIncome').textContent = `NT$ ${inc.toLocaleString()}`;
+
+            const percent = Math.min(100, Math.round((exp / db.monthlyBudget) * 100));
+            document.getElementById('kpiBudgetBar').style.width = `${percent}%`;
+
+            const daysInMonth = new Date(ym.substring(0,4), ym.substring(5,7), 0).getDate();
+            const dailyAvg = Math.round(exp / daysInMonth);
+            document.getElementById('kpiDailyAvg').textContent = `日均花費 NT$ ${dailyAvg.toLocaleString()}`;
+            document.getElementById('kpiNet').textContent = `淨收支 NT$ ${(inc - exp).toLocaleString()}`;
+        }
+
+        function renderDashAccounts() {
+            const grid = document.getElementById('dashAccountsGrid');
+            grid.innerHTML = '';
+            db.accounts.forEach(a => {
+                const div = document.createElement('div');
+                div.className = 'muji-card p-3 space-y-1';
+                div.innerHTML = `
+                    <span class="text-[9px] text-muji-lightMuted font-mono block uppercase">${a.type}</span>
+                    <span class="text-xs font-bold text-muji-text block truncate">${a.name}</span>
+                    <span class="text-xs font-mono text-muji-brown block font-semibold">NT$ ${parseFloat(a.balance).toLocaleString()}</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function renderRecentList() {
+            const container = document.getElementById('dashRecentList');
+            container.innerHTML = '';
+            const recent = [...db.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p class="text-xs text-muji-lightMuted py-4 text-center">尚無任何消費紀錄</p>';
+                return;
+            }
+
+            recent.forEach(t => {
+                const isExp = t.type === 'expense';
+                const acc = db.accounts.find(a => a.id === t.accountId);
+                const div = document.createElement('div');
+                div.className = 'py-2.5 flex items-center justify-between text-xs';
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-[10px] text-muji-lightMuted font-mono">${t.date.substring(5)}</span>
+                        <div>
+                            <span class="font-bold text-muji-text block">${t.category}</span>
+                            <span class="text-[11px] text-muji-muted">${t.note || (acc ? acc.name : '-')}</span>
+                        </div>
+                    </div>
+                    <span class="font-mono font-bold ${isExp ? 'text-muji-red' : 'text-muji-sage'}">
+                        ${isExp ? '-' : '+'}NT$ ${parseFloat(t.amount).toLocaleString()}
+                    </span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderGroupedTransactions() {
+            const search = document.getElementById('txSearchInput').value.toLowerCase();
+            const typeF = document.getElementById('txFilterType').value;
+            const accF = document.getElementById('txFilterAccount').value;
+            const monthF = document.getElementById('txFilterMonth').value;
+
+            const filtered = db.transactions.filter(t => {
+                const matchSearch = (t.note && t.note.toLowerCase().includes(search)) || t.category.toLowerCase().includes(search);
+                const matchType = typeF === 'all' || t.type === typeF;
+                const matchAcc = accF === 'all' || t.accountId === accF || t.fromAccountId === accF || t.toAccountId === accF;
+                const matchMonth = !monthF || t.date.startsWith(monthF);
+                return matchSearch && matchType && matchAcc && matchMonth;
+            }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            const container = document.getElementById('txGroupedContainer');
+            const empty = document.getElementById('txEmptyState');
+            container.innerHTML = '';
+
+            if (filtered.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            } else empty.classList.add('hidden');
+
+            const groups = {};
+            filtered.forEach(t => {
+                if (!groups[t.date]) groups[t.date] = [];
+                groups[t.date].push(t);
+            });
+
+            Object.keys(groups).forEach(date => {
+                const dayBox = document.createElement('div');
+                dayBox.className = 'muji-card p-4 space-y-2';
+
+                let daySum = 0;
+                groups[date].forEach(t => { if(t.type === 'expense') daySum += parseFloat(t.amount); });
+
+                let rowsHtml = '';
+                groups[date].forEach(t => {
+                    const isExp = t.type === 'expense';
+                    const isInc = t.type === 'income';
+                    const acc = db.accounts.find(a => a.id === t.accountId);
+
+                    rowsHtml += `
+                        <div class="py-2 flex items-center justify-between text-xs border-b border-muji-border last:border-0">
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2 py-0.5 bg-muji-beige text-muji-brown font-bold text-[10px] rounded">${t.category}</span>
+                                <div>
+                                    <span class="text-muji-text font-medium block">${t.note || '-'}</span>
+                                    <span class="text-[10px] text-muji-lightMuted">${acc ? acc.name : '-'}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="font-mono font-bold ${isExp ? 'text-muji-red' : isInc ? 'text-muji-sage' : 'text-muji-brown'}">
+                                    ${isExp ? '-' : isInc ? '+' : ''}NT$ ${parseFloat(t.amount).toLocaleString()}
+                                </span>
+                                <button onclick="deleteTx('${t.id}')" class="text-muji-lightMuted hover:text-rose-600 transition">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                dayBox.innerHTML = `
+                    <div class="flex justify-between items-center pb-2 border-b border-muji-border text-xs text-muji-muted font-mono">
+                        <span class="font-bold text-muji-text">${date}</span>
+                        <span>本日支出小計: NT$ ${daySum.toLocaleString()}</span>
+                    </div>
+                    <div class="pt-1">${rowsHtml}</div>
+                `;
+                container.appendChild(dayBox);
+            });
+        }
+
+        function renderAccountsGrid() {
+            const grid = document.getElementById('accountsGrid');
+            grid.innerHTML = '';
+            db.accounts.forEach(a => {
+                const div = document.createElement('div');
+                div.className = 'muji-card p-5 space-y-3 relative';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-mono font-bold text-muji-lightMuted uppercase tracking-wider">${a.type}</span>
+                        <button onclick="deleteAccount('${a.id}')" class="text-muji-lightMuted hover:text-rose-600"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-muji-text">${a.name}</h4>
+                        <p class="text-xl font-mono font-bold text-muji-brown mt-1">NT$ ${parseFloat(a.balance).toLocaleString()}</p>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function renderDashChart() {
+            const ym = document.getElementById('dashMonthFilter').value;
+            const monthTxs = db.transactions.filter(t => t.type === 'expense' && t.date.startsWith(ym));
+
+            const catMap = {};
+            monthTxs.forEach(t => {
+                catMap[t.category] = (catMap[t.category] || 0) + parseFloat(t.amount);
+            });
+
+            const ctx = document.getElementById('chartDashCategory').getContext('2d');
+            if (dashChartInstance) dashChartInstance.destroy();
+
+            dashChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catMap).length ? Object.keys(catMap) : ['尚無支出'],
+                    datasets: [{
+                        data: Object.values(catMap).length ? Object.values(catMap) : [1],
+                        backgroundColor: ['#8c2e2b', '#6b7c6c', '#4a3e35', '#a39e93', '#e7e1d5', '#c8bda8', '#5c544d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, color: '#736e65' } } }
+                }
+            });
+        }
+
+        function populateDropdowns() {
+            const accSelects = ['txAccount', 'txAccountFrom', 'txAccountTo', 'txFilterAccount'];
+            accSelects.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const prev = el.value;
+                el.innerHTML = id === 'txFilterAccount' ? '<option value="all">所有帳戶</option>' : '';
+                db.accounts.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = a.name;
+                    el.appendChild(opt);
+                });
+                if (prev) el.value = prev;
+            });
+            updateCategoryDropdown();
+        }
+
+        function updateCategoryDropdown() {
+            const type = document.getElementById('txType').value;
+            const select = document.getElementById('txCategory');
+            select.innerHTML = '';
+            (STUDENT_CATEGORIES[type] || STUDENT_CATEGORIES.expense).forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name;
+                opt.textContent = c.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function setTxType(type) {
+            document.getElementById('txType').value = type;
+            const btnExp = document.getElementById('tabExpense');
+            const btnInc = document.getElementById('tabIncome');
+            const btnTra = document.getElementById('tabTransfer');
+
+            btnExp.className = type === 'expense' ? 'py-1 rounded bg-white text-muji-red font-bold shadow-sm' : 'py-1 rounded text-muji-muted';
+            btnInc.className = type === 'income' ? 'py-1 rounded bg-white text-muji-sage font-bold shadow-sm' : 'py-1 rounded text-muji-muted';
+            btnTra.className = type === 'transfer' ? 'py-1 rounded bg-white text-muji-brown font-bold shadow-sm' : 'py-1 rounded text-muji-muted';
+
+            const singleAcc = document.getElementById('singleAccSelect');
+            const transferAcc = document.getElementById('transferAccSelect');
+            const catBox = document.getElementById('categorySelectBox');
+
+            if (type === 'transfer') {
+                singleAcc.classList.add('hidden');
+                transferAcc.classList.remove('hidden');
+                catBox.classList.add('hidden');
+            } else {
+                singleAcc.classList.remove('hidden');
+                transferAcc.classList.add('hidden');
+                catBox.classList.remove('hidden');
+                updateCategoryDropdown();
+            }
+        }
+
+        function onAccountPresetChange(val) {
+            if (val === 'custom') return;
+            const [code, type, name] = val.split('|');
+            document.getElementById('accName').value = name;
+            document.getElementById('accType').value = type;
+        }
+
+        function calculateBillSplitter() {
+            const title = document.getElementById('splitTitle').value || '聚餐分帳';
+            const total = parseFloat(document.getElementById('splitTotal').value) || 0;
+            const people = parseInt(document.getElementById('splitPeople').value) || 1;
+            const taxPct = parseFloat(document.getElementById('splitTax').value) || 0;
+            const note = document.getElementById('splitNote').value || '';
+
+            const grandTotal = Math.round(total * (1 + taxPct / 100));
+            const perPerson = Math.ceil(grandTotal / people);
+
+            document.getElementById('splitResGrandTotal').textContent = `NT$ ${grandTotal.toLocaleString()}`;
+            document.getElementById('splitResPerPerson').textContent = `NT$ ${perPerson.toLocaleString()}`;
+
+            const lineMsg = `【${title} - 分帳通知】\n💰 總金額: NT$${grandTotal.toLocaleString()} (含${taxPct}%服務費)\n👥 總人數: ${people} 人\n👉 每人應付: NT$${perPerson}\n------------------\n${note ? '🏦 轉帳帳號: ' + note : '請記得轉帳或付現喔！'}`;
+            document.getElementById('splitLineText').value = lineMsg;
+        }
+
+        function calculateSalary() {
+            const hourly = parseFloat(document.getElementById('salHourly').value) || 0;
+            const weekly = parseFloat(document.getElementById('salWeeklyHours').value) || 0;
+            const weeks = parseFloat(document.getElementById('salWeeks').value) || 4;
+            const bonus = parseFloat(document.getElementById('salBonus').value) || 0;
+
+            const totalHours = Math.round(weekly * weeks);
+            const totalSal = Math.round(hourly * totalHours + bonus);
+
+            document.getElementById('salResTotal').textContent = `NT$ ${totalSal.toLocaleString()}`;
+            document.getElementById('salResHours').textContent = `本月總工時約 ${totalHours} 小時`;
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            }, 2500);
+        }
+
+        function deleteTx(id) {
+            if (confirm('確定要刪除這筆紀錄嗎？')) {
+                db.transactions = db.transactions.filter(t => t.id !== id);
+                saveDB();
+                showToast('已刪除紀錄');
+            }
+        }
+
+        function deleteAccount(id) {
+            if (db.accounts.length <= 1) {
+                alert('至少需保留一個帳戶！');
+                return;
+            }
+            if (confirm('確定要刪除此帳戶嗎？')) {
+                db.accounts = db.accounts.filter(a => a.id !== id);
+                saveDB();
+                showToast('已刪除帳戶');
+            }
+        }
+
+        function syncSettingsForm() {
+            document.getElementById('settingBudget').value = db.monthlyBudget;
+            document.getElementById('settingAlertThreshold').value = db.alertThreshold;
+        }
+
+        function bindEvents() {
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+
+            document.getElementById('btnSidebarQuickAdd').addEventListener('click', () => openModal('modalTx'));
+            document.getElementById('btnMobileQuickAdd').addEventListener('click', () => openModal('modalTx'));
+
+            ['splitTitle', 'splitTotal', 'splitPeople', 'splitTax', 'splitPrepaid', 'splitNote'].forEach(id => {
+                document.getElementById(id).addEventListener('input', calculateBillSplitter);
+            });
+
+            document.getElementById('btnCopySplitMsg').addEventListener('click', () => {
+                const text = document.getElementById('splitLineText');
+                text.select();
+                document.execCommand('copy');
+                showToast('已複製分帳訊息！');
+            });
+
+            document.getElementById('btnAddSplitToTx').addEventListener('click', () => {
+                const title = document.getElementById('splitTitle').value || '聚餐分帳';
+                const total = parseFloat(document.getElementById('splitTotal').value) || 0;
+                const people = parseInt(document.getElementById('splitPeople').value) || 1;
+                const taxPct = parseFloat(document.getElementById('splitTax').value) || 0;
+                const grandTotal = Math.round(total * (1 + taxPct / 100));
+                const perPerson = Math.ceil(grandTotal / people);
+
+                db.transactions.push({
+                    id: 'tx_' + Date.now(),
+                    type: 'expense',
+                    amount: perPerson,
+                    category: '聚餐/社團',
+                    accountId: db.accounts[0] ? db.accounts[0].id : 'acc_cash',
+                    date: new Date().toISOString().substring(0, 10),
+                    note: `${title} (個人分帳額)`
+                });
+                saveDB();
+                showToast('已將聚餐分帳個人額度寫入記帳！');
+            });
+
+            ['salHourly', 'salWeeklyHours', 'salWeeks', 'salBonus'].forEach(id => {
+                document.getElementById(id).addEventListener('input', calculateSalary);
+            });
+
+            document.getElementById('btnAddSalaryToTx').addEventListener('click', () => {
+                const job = document.getElementById('salJobName').value || '打工';
+                const hourly = parseFloat(document.getElementById('salHourly').value) || 0;
+                const weekly = parseFloat(document.getElementById('salWeeklyHours').value) || 0;
+                const weeks = parseFloat(document.getElementById('salWeeks').value) || 4;
+                const bonus = parseFloat(document.getElementById('salBonus').value) || 0;
+                const totalSal = Math.round(hourly * (weekly * weeks) + bonus);
+
+                db.transactions.push({
+                    id: 'tx_' + Date.now(),
+                    type: 'income',
+                    amount: totalSal,
+                    category: '打工薪資',
+                    accountId: db.accounts[0] ? db.accounts[0].id : 'acc_cash',
+                    date: new Date().toISOString().substring(0, 10),
+                    note: `${job} 預計發薪薪資`
+                });
+                saveDB();
+                showToast('已加入本月打工收入紀錄！');
+            });
+
+            document.getElementById('formTx').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const type = document.getElementById('txType').value;
+                const amount = parseFloat(document.getElementById('txAmount').value);
+                const date = document.getElementById('txDate').value;
+                const note = document.getElementById('txNote').value;
+
+                if (type === 'transfer') {
+                    const fromId = document.getElementById('txAccountFrom').value;
+                    const toId = document.getElementById('txAccountTo').value;
+                    if (fromId === toId) { alert('轉出與轉入帳戶不可相同'); return; }
+
+                    const accFrom = db.accounts.find(a => a.id === fromId);
+                    const accTo = db.accounts.find(a => a.id === toId);
+                    if (accFrom) accFrom.balance = parseFloat(accFrom.balance) - amount;
+                    if (accTo) accTo.balance = parseFloat(accTo.balance) + amount;
+
+                    db.transactions.push({
+                        id: 'tx_' + Date.now(),
+                        type: 'transfer', amount, category: '帳戶轉帳',
+                        fromAccountId: fromId, toAccountId: toId, date, note
+                    });
+                } else {
+                    const accId = document.getElementById('txAccount').value;
+                    const category = document.getElementById('txCategory').value;
+                    const acc = db.accounts.find(a => a.id === accId);
+
+                    if (acc) {
+                        if (type === 'expense') acc.balance = parseFloat(acc.balance) - amount;
+                        if (type === 'income') acc.balance = parseFloat(acc.balance) + amount;
+                    }
+
+                    db.transactions.push({
+                        id: 'tx_' + Date.now(),
+                        type, amount, category, accountId: accId, date, note
+                    });
+                }
+
+                saveDB();
+                closeModal('modalTx');
+                showToast('已新增記帳紀錄');
+            });
+
+            document.getElementById('formAccount').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('accName').value;
+                const type = document.getElementById('accType').value;
+                const balance = parseFloat(document.getElementById('accBalance').value) || 0;
+
+                db.accounts.push({ id: 'acc_' + Date.now(), name, type, balance });
+                saveDB();
+                closeModal('modalAccount');
+                document.getElementById('formAccount').reset();
+                showToast('已建立新帳戶！');
+            });
+
+            document.getElementById('formBudgetSettings').addEventListener('submit', (e) => {
+                e.preventDefault();
+                db.monthlyBudget = parseFloat(document.getElementById('settingBudget').value);
+                db.alertThreshold = parseFloat(document.getElementById('settingAlertThreshold').value);
+                saveDB();
+                showToast('已儲存預算與吃土預警設定');
+            });
+
+            ['txSearchInput', 'txFilterType', 'txFilterAccount', 'txFilterMonth'].forEach(id => {
+                document.getElementById(id).addEventListener('input', renderGroupedTransactions);
+                document.getElementById(id).addEventListener('change', renderGroupedTransactions);
+            });
+
+            document.getElementById('dashMonthFilter').addEventListener('change', renderAll);
+
+            // Export JSON
+            document.getElementById('btnExportJSON').addEventListener('click', () => {
+                const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+                const anchor = document.createElement('a');
+                anchor.setAttribute("href", str);
+                anchor.setAttribute("download", `muji_campus_kakeibo_${new Date().toISOString().substring(0,10)}.json`);
+                anchor.click();
+                showToast('已匯出 JSON 資料庫');
+            });
+
+            // Import JSON
+            document.getElementById('importJSONInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        if (imported && imported.accounts && imported.transactions) {
+                            db = imported;
+                            saveDB();
+                            showToast('成功匯入 JSON 備份資料！');
+                        } else {
+                            alert('格式錯誤，請確認上傳有效的備份 JSON 檔案。');
+                        }
+                    } catch (err) {
+                        alert('檔案解析失敗！');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // Export CSV
+            document.getElementById('btnExportCSV').addEventListener('click', () => {
+                let csv = "\uFEFFID,日期,類型,金額,類別,帳戶,備註\n";
+                db.transactions.forEach(t => {
+                    const acc = db.accounts.find(a => a.id === t.accountId);
+                    csv += `"${t.id}","${t.date}","${t.type}","${t.amount}","${t.category}","${acc ? acc.name : ''}","${t.note || ''}"\n`;
+                });
+                const link = document.createElement("a");
+                link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv));
+                link.setAttribute("download", `muji_campus_kakeibo_${new Date().toISOString().substring(0,10)}.csv`);
+                link.click();
+                showToast('已匯出 CSV 報表');
+            });
+
+            document.getElementById('btnClearData').addEventListener('click', () => {
+                if (confirm('確定要清空所有資料嗎？清空後初次開啟將維持全空狀態。')) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
